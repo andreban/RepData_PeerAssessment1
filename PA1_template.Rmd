@@ -8,14 +8,33 @@ output:
 
 ## Loading and preprocessing the data
 
+Unzip the data
+```r
+    unzip('activity.zip')
+```
 
+now load the CSV
+```{r}
+    data <- read.csv('activity.csv')
+    summary(data)
+    data$date <- as.Date(data$date)
+
+```
 
 ## What is mean total number of steps taken per day?
-
-
+```{r}
+aggregated <- aggregate(steps ~ date, data, mean)
+mean(aggregated$steps)
+median(aggregated$steps)
+library(ggplot2)
+qplot(date, steps, data=aggregated, geom="bar", stat="identity");
+```
 
 ## What is the average daily activity pattern?
-
+```{r}
+aggregated <- aggregate(steps ~ interval, data, mean)
+qplot(interval, steps, data=aggregated, geom="line");
+```
 
 
 ## Imputing missing values
@@ -23,3 +42,10 @@ output:
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r}
+    data$day <- weekdays(data$date)
+    data$weekday <- data$day != 'sábado' & data$day != 'domingo'
+    aggregated <- aggregate(steps ~ interval + weekday, data, mean)
+    qplot(interval, steps, data=aggregated, geom="line", color=weekday);
+
+```
