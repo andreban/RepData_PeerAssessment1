@@ -10,6 +10,7 @@ output:
 
 Unzip the data
 ```r
+Sys.setlocale("LC_TIME", "en_US.UTF-8")
     unzip('activity.zip')
 ```
 
@@ -23,7 +24,7 @@ now load the CSV
 
 ## What is mean total number of steps taken per day?
 ```{r}
-aggregated <- aggregate(steps ~ date, data, mean)
+aggregated <- aggregate(steps ~ date, data, sum)
 mean(aggregated$steps)
 median(aggregated$steps)
 library(ggplot2)
@@ -44,7 +45,7 @@ qplot(interval, steps, data=aggregated, geom="line");
 ## Are there differences in activity patterns between weekdays and weekends?
 ```{r}
     data$day <- weekdays(data$date)
-    data$weekday <- data$day != 'sábado' & data$day != 'domingo'
+    data$weekday <- data$day != 'Saturday' & data$day != 'Sunday'
     aggregated <- aggregate(steps ~ interval + weekday, data, mean)
     qplot(interval, steps, data=aggregated, geom="line", color=weekday);
 
