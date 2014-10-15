@@ -9,18 +9,33 @@ output:
 ## Loading and preprocessing the data
 
 Unzip the data
-```{r, echo=FALSE}
-Sys.setlocale("LC_TIME", "en_US.UTF-8")
-    unzip('activity.zip')
+```{r}
+unzip('activity.zip')
 ```
 
 now load the CSV
 ```{r}
     data <- read.csv('activity.csv')
+```
+Convert the date and the interval to time.    
+```{r}
     data$date <- as.Date(data$date)
     data$time <- as.POSIXct(strptime(sprintf("%04d",data$interval), format="%H%M"))
+```
+
+Setting the locale to get day names in english
+```{r}
+    Sys.setlocale("LC_TIME", "en_US.UTF-8")
+```
+
+Getting the day of week, and creating a factor to show if the day is a weekday or weekend
+```{r}
+
     data$dayOfWeek <- weekdays(data$date)
-    data$isWeekday <- data$day != 'Saturday' & data$day != 'Sunday'
+    data$daytype <- data$day != 'Saturday' & data$day != 'Sunday'
+    data$daytype[data$daytype == T] <- "weekday"
+    data$daytype[data$daytype == F] <- "weekend"
+    data$daytype <- as.factor(data$daytype)
 ```
 
 ## What is mean total number of steps taken per day?
@@ -32,7 +47,7 @@ stepsByDay <- aggregate(steps ~ date, data, sum)
 
 Now, lets plot the Histogram.
 ```{r}
-hist(stepsByDay$steps, breaks=20,main="Steps Per Day By Frequency",xlab="Daily Steps")
+hist(stepsByDay$steps, breaks=20,main="Frequency of Steps Per Day",xlab="Daily Steps")
 ```
 
 This is the Mean:
@@ -66,7 +81,7 @@ The hour with the biggest average number of steps is
 format(meanStepsByTimeOfday$time[which.max(meanStepsByTimeOfday$steps)], "%H:%M")
 ```
 
-which has, on average
+with the average number of steps of
 ```{r}
 max(meanStepsByTimeOfday$steps)
 ```
@@ -105,7 +120,7 @@ colnames(newdata) <- c("time", "steps", "date", "interval")
 Colculate the steps per day using the new data and plot the histogram
 ```{r}
 stepsByDay <- aggregate(steps ~ date, newdata, sum)
-hist(stepsByDay$steps, breaks=20,main="Steps Per Day By Frequency",xlab="Daily Steps")
+hist(stepsByDay$steps, breaks=20,main="Frequency of Steps Per Day",xlab="Daily Steps")
 ```
 
 Now, take the mean and the median
@@ -118,14 +133,15 @@ median(stepsByDay$steps, na.rm=T)
 We can see that the mean is still the same as before and the median is very close, but the frequency of days on the mean is much larger. While, on the original data, it is close to 10, on the modified data it is larger than 15.
 
 ## Are there differences in activity patterns between weekdays and weekends?
-```{r, fig.width=10}
-    par(mfrow = c(2, 1))
-    par(mar=c(4,5,4,5))
-    aggregated <- aggregate(steps ~ time + isWeekday, data, mean)
-    weekDays <- aggregated[aggregated$isWeekday == T,]
-    weekendDays <- aggregated[aggregated$isWeekday == F,]
-    plot(weekDays$time, weekDays$steps, type="l", xlab="", ylab="avg steps", main="Week Days");
-    plot(weekendDays$time, weekendDays$steps, type="l", xlab="Hour of Day", ylab="avg steps", main="Weekends");
-    
 
+Aggregate steps by interval and the type of the day 
+```{r, fig.width=10}
+
+library(ggplot2)
+
+    aggregated <- aggregate(steps ~ interval + daytype, data, mean)
+    qplot(interval, steps, data=aggregated, geom="line", colour=daytype) + facet_grid(daytype ~ .)
+    
 ```
+The pattern for weekdays and weekends look different. On weekdays, the number of steps increase earlier than on weekends. Also, the steps are more evenly distributed on weekends than on weekdays.
+

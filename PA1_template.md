@@ -5,18 +5,40 @@
 
 Unzip the data
 
-```
-## [1] "en_US.UTF-8"
+```r
+unzip('activity.zip')
 ```
 
 now load the CSV
 
 ```r
     data <- read.csv('activity.csv')
+```
+Convert the date and the interval to time.    
+
+```r
     data$date <- as.Date(data$date)
     data$time <- as.POSIXct(strptime(sprintf("%04d",data$interval), format="%H%M"))
+```
+
+Setting the locale to get day names in english
+
+```r
+    Sys.setlocale("LC_TIME", "en_US.UTF-8")
+```
+
+```
+## [1] "en_US.UTF-8"
+```
+
+Getting the day of week, and creating a factor to show if the day is a weekday or weekend
+
+```r
     data$dayOfWeek <- weekdays(data$date)
-    data$isWeekday <- data$day != 'Saturday' & data$day != 'Sunday'
+    data$daytype <- data$day != 'Saturday' & data$day != 'Sunday'
+    data$daytype[data$daytype == T] <- "weekday"
+    data$daytype[data$daytype == F] <- "weekend"
+    data$daytype <- as.factor(data$daytype)
 ```
 
 ## What is mean total number of steps taken per day?
@@ -30,10 +52,10 @@ stepsByDay <- aggregate(steps ~ date, data, sum)
 Now, lets plot the Histogram.
 
 ```r
-hist(stepsByDay$steps, breaks=20,main="Steps Per Day By Frequency",xlab="Daily Steps")
+hist(stepsByDay$steps, breaks=20,main="Frequency of Steps Per Day",xlab="Daily Steps")
 ```
 
-![plot of chunk unnamed-chunk-4](./PA1_template_files/figure-html/unnamed-chunk-4.png) 
+![plot of chunk unnamed-chunk-7](./PA1_template_files/figure-html/unnamed-chunk-7.png) 
 
 This is the Mean:
 
@@ -70,7 +92,7 @@ Plot the chart
     title("Mean number of steps by Time of Day")
 ```
 
-![plot of chunk unnamed-chunk-8](./PA1_template_files/figure-html/unnamed-chunk-8.png) 
+![plot of chunk unnamed-chunk-11](./PA1_template_files/figure-html/unnamed-chunk-11.png) 
 
 The hour with the biggest average number of steps is
 
@@ -82,7 +104,7 @@ format(meanStepsByTimeOfday$time[which.max(meanStepsByTimeOfday$steps)], "%H:%M"
 ## [1] "08:35"
 ```
 
-which has, on average
+with the average number of steps of
 
 ```r
 max(meanStepsByTimeOfday$steps)
@@ -101,7 +123,7 @@ colSums(is.na(data))
 ```
 
 ```
-##     steps      date  interval      time dayOfWeek isWeekday 
+##     steps      date  interval      time dayOfWeek   daytype 
 ##      2304         0         0         0         0         0
 ```
 Whe observe that the only column that has NA's is the "steps" column.
@@ -137,10 +159,10 @@ Colculate the steps per day using the new data and plot the histogram
 
 ```r
 stepsByDay <- aggregate(steps ~ date, newdata, sum)
-hist(stepsByDay$steps, breaks=20,main="Steps Per Day By Frequency",xlab="Daily Steps")
+hist(stepsByDay$steps, breaks=20,main="Frequency of Steps Per Day",xlab="Daily Steps")
 ```
 
-![plot of chunk unnamed-chunk-16](./PA1_template_files/figure-html/unnamed-chunk-16.png) 
+![plot of chunk unnamed-chunk-19](./PA1_template_files/figure-html/unnamed-chunk-19.png) 
 
 Now, take the mean and the median
 
@@ -164,14 +186,15 @@ We can see that the mean is still the same as before and the median is very clos
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
+Aggregate steps by interval and the type of the day 
+
 ```r
-    par(mfrow = c(2, 1))
-    par(mar=c(4,5,4,5))
-    aggregated <- aggregate(steps ~ time + isWeekday, data, mean)
-    weekDays <- aggregated[aggregated$isWeekday == T,]
-    weekendDays <- aggregated[aggregated$isWeekday == F,]
-    plot(weekDays$time, weekDays$steps, type="l", xlab="", ylab="avg steps", main="Week Days");
-    plot(weekendDays$time, weekendDays$steps, type="l", xlab="Hour of Day", ylab="avg steps", main="Weekends");
+library(ggplot2)
+
+    aggregated <- aggregate(steps ~ interval + daytype, data, mean)
+    qplot(interval, steps, data=aggregated, geom="line", colour=daytype) + facet_grid(daytype ~ .)
 ```
 
-![plot of chunk unnamed-chunk-18](./PA1_template_files/figure-html/unnamed-chunk-18.png) 
+![plot of chunk unnamed-chunk-21](./PA1_template_files/figure-html/unnamed-chunk-21.png) 
+The pattern for weekdays and weekends look different. On weekdays, the number of steps increase earlier than on weekends. Also, the steps are more evenly distributed on weekends than on weekdays.
+
