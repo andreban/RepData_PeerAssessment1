@@ -67,7 +67,7 @@ mean(stepsByDay$steps)
 ## [1] 10766
 ```
 
-And the Median
+And the Median:
 
 ```r
 median(stepsByDay$steps)

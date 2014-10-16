@@ -55,7 +55,7 @@ This is the Mean:
 mean(stepsByDay$steps)
 ```
 
-And the Median
+And the Median:
 ```{r}
 median(stepsByDay$steps)
 ```
